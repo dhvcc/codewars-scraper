@@ -2,8 +2,6 @@ from loguru import logger
 
 from codewars_scraper import Scraper
 
-# TODO: Speedups (json)
-
 # TODO: Config management
 # TODO: Make executable
 # TODO: Add output path
@@ -15,7 +13,7 @@ PASSWORD = ""
 @logger.catch
 def main():
     logger.info("Starting to scrape")
-    with Scraper(EMAIL, PASSWORD, headless=False) as scraper:
+    with Scraper(EMAIL, PASSWORD, headless=True) as scraper:
         scraper.parse()
         scraper.save()
 

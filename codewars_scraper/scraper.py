@@ -1,16 +1,17 @@
+from codewars_scraper.speedups import json
 from os import mkdir
 from os.path import isdir, join
 from typing import Dict, List, NoReturn
 
+from loguru import logger
 from pathvalidate import sanitize_filename
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
-import json
-from loguru import logger
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+
 from codewars_scraper import file_extensions
 
 
