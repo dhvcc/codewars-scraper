@@ -24,7 +24,7 @@ class Scraper:
             *,
             headless: bool = True,
             timeout: int = 10,
-            driver_path: str = "./chromedriver"
+            driver_path: str = "./codewars_scraper/driver/chromedriver"
     ):
         logger.debug("Scraper init")
         self.email = email

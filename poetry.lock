@@ -48,7 +48,7 @@ name = "ujson"
 version = "4.0.1"
 description = "Ultra fast JSON encoder and decoder for Python"
 category = "main"
-optional = false
+optional = true
 python-versions = ">=3.6"
 
 [[package]]
@@ -78,7 +78,7 @@ dev = ["pytest (>=4.6.2)", "black (>=19.3b0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "eb999bc969123a053a798bfa32de3e0950ec159bb364c36f778d2561f7615a08"
+content-hash = "634c99bfbe0209d3fc5e20a6e88615b449aab98114e1cffe1f5159512107948b"
 
 [metadata.files]
 colorama = [
