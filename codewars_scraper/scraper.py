@@ -4,50 +4,63 @@ from typing import Dict, List, NoReturn
 
 from pathvalidate import sanitize_filename
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 import json
+from loguru import logger
+from codewars_scraper import file_extensions
 
 
 class Scraper:
-    FILE_EXT_MAP = {
-        "Python": ".py",
-        "Javascript": ".js",
-    }
 
     def __init__(
             self,
             email: str,
             password: str,
-            timeout: int = 5,
+            *,
+            headless: bool = True,
+            timeout: int = 10,
             driver_path: str = "./chromedriver"
     ):
+        logger.debug("Scraper init")
         self.email = email
         self.password = password
+
         self.timeout = timeout
+
+        self.options = webdriver.ChromeOptions()
+        self.options.headless = headless
+
         self.driver_path = driver_path
-        self.driver = webdriver.Chrome(self.driver_path)
+        self.driver = webdriver.Chrome(executable_path=self.driver_path, options=self.options)
 
         # { Lang: { kyu: { title: code } } }
         self.solutions_data: Dict[str, Dict[str, Dict[str, str]]] = {}
 
     @property
     def json(self):
+        logger.info("Returning JSON")
         return json.dumps(self.solutions_data, indent=4)
 
     def scroll_down(self) -> NoReturn:
         last_height = self.driver.execute_script("return document.body.scrollHeight")
+        logger.info(f"Scrolling down the page, initial height {last_height}")
 
         while True:
             self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight-1000);")
             # Wait to load the page.
             self.driver.implicitly_wait(self.timeout)
             new_height = self.driver.execute_script("return document.body.scrollHeight")
+            logger.debug(f"New height {new_height}")
             if new_height == last_height:
                 break
             last_height = new_height
 
     def parse_solutions(self, solutions: List[WebElement]) -> NoReturn:
+        logger.info("Parsing solutions")
         for solution in solutions:
             title_div = solution.find_element_by_class_name("item-title")
 
@@ -76,6 +89,7 @@ class Scraper:
                 }
 
     def parse(self) -> NoReturn:
+        logger.info("Parsing started")
         self.driver.get("https://www.codewars.com/users/sign_in")
         email = self.driver.find_element_by_id("user_email")
         password = self.driver.find_element_by_id("user_password")
@@ -86,7 +100,12 @@ class Scraper:
         password.send_keys(Keys.RETURN)
         self.driver.implicitly_wait(self.timeout)
 
-        profile_link = self.driver.find_element_by_id("header_profile_link").get_attribute("href")
+        profile_link = WebDriverWait(
+            self.driver, self.timeout
+        ).until(
+            EC.presence_of_element_located((By.ID, "header_profile_link"))
+        ).get_attribute("href")
+
         self.driver.get(f"{profile_link}/completed_solutions")
 
         self.scroll_down()
@@ -95,6 +114,7 @@ class Scraper:
         self.parse_solutions(solutions)
 
     def save(self) -> NoReturn:
+        logger.info("Saving")
         for lang, kyu_data in self.solutions_data.items():
             if not isdir(lang):
                 mkdir(lang)
@@ -105,13 +125,16 @@ class Scraper:
                     mkdir(kyu_dir)
 
                 for title, code in solutions.items():
-                    filename = f"{sanitize_filename(title)}{self.FILE_EXT_MAP[lang]}"
+                    filename = f"{sanitize_filename(title)}{file_extensions.MAP[lang]}"
                     with open(join(kyu_dir, filename), "w+") as kata_file:
                         kata_file.write(code)
                         kata_file.write("\n")
 
     def __enter__(self):
+        logger.debug("Context manager entered")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        logger.debug("Context manager exited")
         self.driver.quit()
+        logger.debug("Driver quit")

@@ -1,10 +1,8 @@
+from loguru import logger
+
 from codewars_scraper import Scraper
 
-# TODO: Add metadata
-# TODO: Add loguru logging
-# Poetry?
 # TODO: Speedups (json)
-# TODO: Updated extension map
 
 # TODO: Config management
 # TODO: Make executable
@@ -13,6 +11,14 @@ from codewars_scraper import Scraper
 EMAIL = ""
 PASSWORD = ""
 
-with Scraper(EMAIL, PASSWORD) as scraper:
-    scraper.parse()
-    scraper.save()
+
+@logger.catch
+def main():
+    logger.info("Starting to scrape")
+    with Scraper(EMAIL, PASSWORD, headless=False) as scraper:
+        scraper.parse()
+        scraper.save()
+
+
+if __name__ == '__main__':
+    main()
