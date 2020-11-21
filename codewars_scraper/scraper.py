@@ -1,4 +1,3 @@
-from codewars_scraper.speedups import json
 from os import mkdir
 from os.path import isdir, join
 from typing import Dict, List, NoReturn
@@ -11,8 +10,10 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from webdrivermanager import ChromeDriverManager
 
 from codewars_scraper import file_extensions
+from codewars_scraper.speedups import json
 
 
 class Scraper:
@@ -24,9 +25,13 @@ class Scraper:
             *,
             headless: bool = True,
             timeout: int = 10,
-            driver_path: str = "./codewars_scraper/driver/chromedriver"
     ):
         logger.debug("Scraper init")
+        driver_manager = ChromeDriverManager()
+        driver_manager.download_and_install()
+
+        logger.info("Browser and driver are installed")
+
         self.email = email
         self.password = password
 
@@ -35,8 +40,7 @@ class Scraper:
         self.options = webdriver.ChromeOptions()
         self.options.headless = headless
 
-        self.driver_path = driver_path
-        self.driver = webdriver.Chrome(executable_path=self.driver_path, options=self.options)
+        self.driver = webdriver.Chrome(options=self.options)
 
         # { Lang: { kyu: { title: code } } }
         self.solutions_data: Dict[str, Dict[str, Dict[str, str]]] = {}

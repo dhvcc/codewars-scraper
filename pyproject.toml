@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "codewars-scraper"
-version = "0.2.2"
+version = "0.3"
 description = "Codewars scraper which allows you to parse and download your katas"
 authors = ["dhvcc <1337kwiz@gmail.com>"]
 license = "MIT"
@@ -14,6 +14,7 @@ selenium = "^3.141.0"
 pathvalidate = "^2.3.0"
 loguru = "^0.5.3"
 ujson = {version = "^4.0.1", optional = true}
+webdrivermanager = "^0.9.0"
 
 [tool.poetry.dev-dependencies]
 
