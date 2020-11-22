@@ -1,4 +1,4 @@
-from os import mkdir
+from os import mkdir, makedirs
 from os.path import isdir, join
 from typing import Dict, List, NoReturn
 
@@ -8,7 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 from webdrivermanager import ChromeDriverManager
 
@@ -17,14 +17,13 @@ from codewars_scraper.speedups import json
 
 
 class Scraper:
-
     def __init__(
-            self,
-            email: str,
-            password: str,
-            *,
-            headless: bool = True,
-            timeout: int = 10,
+        self,
+        email: str,
+        password: str,
+        *,
+        headless: bool = True,
+        timeout: int = 10,
     ):
         logger.debug("Scraper init")
         driver_manager = ChromeDriverManager()
@@ -55,7 +54,9 @@ class Scraper:
         logger.info(f"Scrolling down the page, initial height {last_height}")
 
         while True:
-            self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight-1000);")
+            self.driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight-1000);"
+            )
             # Wait to load the page.
             self.driver.implicitly_wait(self.timeout)
             new_height = self.driver.execute_script("return document.body.scrollHeight")
@@ -83,15 +84,9 @@ class Scraper:
                 if kyu in self.solutions_data[language]:
                     self.solutions_data[language][kyu][title] = code
                 else:
-                    self.solutions_data[language][kyu] = {
-                        title: code
-                    }
+                    self.solutions_data[language][kyu] = {title: code}
             else:
-                self.solutions_data[language] = {
-                    kyu: {
-                        title: code
-                    }
-                }
+                self.solutions_data[language] = {kyu: {title: code}}
 
     def parse(self) -> NoReturn:
         logger.info("Parsing started")
@@ -105,11 +100,11 @@ class Scraper:
         password.send_keys(Keys.RETURN)
         self.driver.implicitly_wait(self.timeout)
 
-        profile_link = WebDriverWait(
-            self.driver, self.timeout
-        ).until(
-            EC.presence_of_element_located((By.ID, "header_profile_link"))
-        ).get_attribute("href")
+        profile_link = (
+            WebDriverWait(self.driver, self.timeout)
+            .until(ec.presence_of_element_located((By.ID, "header_profile_link")))
+            .get_attribute("href")
+        )
 
         self.driver.get(f"{profile_link}/completed_solutions")
 
@@ -118,14 +113,17 @@ class Scraper:
         solutions = self.driver.find_elements_by_class_name("solutions")
         self.parse_solutions(solutions)
 
-    def save(self) -> NoReturn:
+    def save(self, path: str) -> NoReturn:
         logger.info("Saving")
         for lang, kyu_data in self.solutions_data.items():
-            if not isdir(lang):
-                mkdir(lang)
+            lang_dir = f"{path}{lang}"
+
+            if not isdir(lang_dir):
+                makedirs(lang_dir)
 
             for kyu, solutions in kyu_data.items():
-                kyu_dir = join(lang, kyu)
+                kyu_dir = join(lang_dir, kyu)
+
                 if not isdir(kyu_dir):
                     mkdir(kyu_dir)
 

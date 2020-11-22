@@ -5,50 +5,62 @@ from loguru import logger
 
 from codewars_scraper import Scraper
 
+
 # TODO: Add output path
 
-EMAIL = environ.get("CODEWARS_EMAIL")
-PASSWORD = environ.get("CODEWARS_PASSWORD")
+
+def arguments():
+    parser = ArgumentParser()
+    parser.add_argument(
+        "--path", help="save solutions to {path} instead of current directory", type=str
+    )
+    parser.add_argument(
+        "--json", help="print solutions in json format", action="store_true"
+    )
+    parser.add_argument(
+        "--no-headless", help="disable headless mode", action="store_true"
+    )
+    parser.add_argument(
+        "--timeout",
+        help="customize selenium timeout (if network is slow)",
+        type=int,
+        default=10,
+    )
+    args = parser.parse_args()
+    return args
 
 
-@logger.catch
-def main():
+def scrape(args, email: str, password: str):
     logger.info("Starting to scrape")
-    with Scraper(EMAIL, PASSWORD,
-                 headless=not args.debug,
-                 timeout=args.timeout) as scraper:
+    with Scraper(
+        email, password, headless=not args.no_headless, timeout=args.timeout
+    ) as scraper:
         scraper.parse()
-        if args.save:
-            scraper.save()
-        if args.json:
+        if args.path:
+            scraper.save((args.path or "") + "/")
+        elif args.json:
             print(scraper.json)
 
 
-if __name__ == '__main__':
-    if not EMAIL or not PASSWORD:
-        raise Exception("Environment variables CODEWARS_EMAIL and CODEWARS_PASSWORD are required")
+def main():
+    email = environ.get("CODEWARS_EMAIL")
+    password = environ.get("CODEWARS_PASSWORD")
 
-    parser = ArgumentParser()
-    parser.add_argument("--save",
-                        help="save solutions in current directory",
-                        action="store_true")
-    parser.add_argument("--json",
-                        help="print solutions in json format",
-                        action="store_true")
-    parser.add_argument("--debug",
-                        help="debug mode, disables headless mode",
-                        action="store_true")
-    parser.add_argument("--timeout",
-                        help="customize selenium timeout (if network is slow)",
-                        type=int,
-                        default=10)
-    args = parser.parse_args()
+    if not email or not password:
+        raise Exception(
+            "Environment variables CODEWARS_EMAIL and CODEWARS_PASSWORD are required"
+        )
+
+    args = arguments()
 
     if args.json:
-        # TODO: mute output, except json
-        ...
-    if args.debug:
-        # TODO: set loguru level to debug
-        ...
+        if args.path:
+            logger.warning("JSON output will be ignored because --path was provided")
+        else:
+            logger.remove()
 
+    logger.catch(scrape)(args, email, password)
+
+
+if __name__ == "__main__":
     main()
